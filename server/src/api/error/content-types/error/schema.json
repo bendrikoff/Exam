@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "errors",
+  "info": {
+    "singularName": "error",
+    "pluralName": "errors",
+    "displayName": "Error",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "question": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::question.question"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "admin::user"
+    },
+    "Archived": {
+      "type": "boolean"
+    },
+    "Answer": {
+      "type": "string"
+    }
+  }
+}
