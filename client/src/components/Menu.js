@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {useNavigate } from "react-router-dom";
 import {Badge, Button, Image, Spinner, Stack} from "react-bootstrap";
 import lamp from "../Images/Education_Icon_Set-07.png";
 import errors from "../Images/Education_Icon_Set-12.png";
@@ -7,15 +8,24 @@ import profile from "../Images/Education_Icon_Set-10.png";
 import {getErrors} from "../http/api";
 
 const Menu = () => {
+    const navigate = useNavigate();
+    
     const [errorsList, setErrors] = useState({info: []});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         getErrors().then(data=>setErrors(data.data.data)).finally(() => setLoading(false));
     }, []);
+
     if (loading) {
         return <Spinner animation={"grow"}/>
     }
+
+    function logOut() {
+        localStorage.clear();
+        navigate("/login");
+    }
+
     return (
         <Stack gap={2} className="mx-auto">
             <h2 color="#6D3CFC">InfoExam</h2>
@@ -27,7 +37,7 @@ const Menu = () => {
                     :<div></div>}
             </Button>
             <Button variant="light" href="/profile"><Image style={{width:15, marginRight:5}} src={profile} />Профиль </Button>
-            <Button variant="light" href="/profile"><Image style={{width:15, marginRight:5}} src={profile} />Выйти </Button>
+            <Button variant="light" onClick={() => logOut()}>🚪 Выйти </Button>
 
 
         </Stack>

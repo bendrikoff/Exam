@@ -37,3 +37,12 @@ export const archiveError = async (id, archive) => {
         })
     return data;
 }
+
+export const getSections = async () => {
+
+    const data = $host.get('api/sections?populate=*' ,
+        { headers: {"Authorization" : `Bearer ${token}`}
+        })
+    return data;
+}
+

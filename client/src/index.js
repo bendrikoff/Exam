@@ -8,7 +8,10 @@ export const Context = createContext(null);
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <Context.Provider value={{
-    user: new UserStore()
+    user: new UserStore(),
+    loginPage : {
+      login: true,
+    },
   }}>
     <React.StrictMode>
       <App />
