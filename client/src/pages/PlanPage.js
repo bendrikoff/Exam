@@ -1,12 +1,13 @@
 import { Alert, Card, Col, Container, Image, ProgressBar, Row, Spinner, Accordion, Button, Badge,ListGroup } from "react-bootstrap";
 import Menu from "../components/Menu";
+import {Context} from '../index';
 import Hat from "../Images/Education_Icon_Set-16.png";
-import FirstBlock from "../Images/First.png";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { getErrors, getSections } from "../http/api";
 
 
 const PlanPage = () => {
+    const {user} = useContext(Context);
     const [show, setShow] = useState(true);
     const [errors, setErrors] = useState({ info: [] });
     const [loading, setLoading] = useState(true);
@@ -26,6 +27,15 @@ const PlanPage = () => {
         return <Spinner animation={"grow"} />
     }
 
+    const totalThemes = sections.reduce(function(sum, section) {
+        return sum + section.attributes?.themes?.data.length;
+    }, 0);
+
+    const passedThemesCount = user.user.passed_themes.length;
+
+    var percentage = (passedThemesCount / totalThemes) * 100;
+
+    const dataArray = ['Item 1', 'Item 2', 'Item 3'];
     return (<Container>
         <Row className="mt-2">
             <Col md={3}>
@@ -37,9 +47,12 @@ const PlanPage = () => {
                         <Image src={Hat} style={{ width: 150 }} />
                     </Container>
                     <h1 className="mx-auto" style={{ width: "max-content" }}>
-                        <p style={{ color: "#1674FD" }}>Цель 75 баллов</p>
+                        {/* <p style={{ color: "#1674FD" }}>Цель 75 баллов</p> */}
                     </h1>
-                    <ProgressBar animated now={45} />
+                    <ProgressBar>
+                    <ProgressBar animated striped variant="success" now={percentage} />
+                    <ProgressBar animated striped variant="warning" now={100 - percentage} />
+                    </ProgressBar>
                 </Container>
                 {errors.filter(error => error.attributes.question.data.attributes !== undefined && error.attributes.Archived === false).length > 5
                     ? <Alert variant="primary" className="mt-3" onClose={() => setShow(false)} dismissible>
@@ -51,17 +64,30 @@ const PlanPage = () => {
                 <Accordion border="light " className="mt-3" >
                 {sections?.map(section => 
                     <Accordion.Item eventKey={section.id}>
-                    <Accordion.Header ><h2>✅ Модуль {section.id}. {section.attributes.Name}</h2><Badge bg="primary" pill>
-                        14
+                    <Accordion.Header >
+                        <h2>{section?.attributes?.themes?.data.every(themes => user.user.passed_themes.some(userThemes => userThemes.id == themes.id))
+                        ?<a>✅</a>
+                        :<a>💡</a>}
+                            Модуль {section.id}. {section.attributes.Name}
+                        </h2>
+                    <Badge bg="primary" pill>
+                        {section?.attributes?.themes?.data.filter(userThemes => 
+                            !user.user.passed_themes.some(themes => 
+                                themes.id == userThemes.id)).length}
                     </Badge>
                     </Accordion.Header>
                     <Accordion.Body>
-                        <ListGroup vertical>
-                            <ListGroup.Item>✅</ListGroup.Item>
-                            <ListGroup.Item>ListGroup</ListGroup.Item>
-                            <ListGroup.Item>renders</ListGroup.Item>
-                            <ListGroup.Item>horizontally!</ListGroup.Item>
-                        </ListGroup>
+                            <ListGroup>
+                                {section?.attributes?.themes?.data.map((item, index) => (
+                                    <ListGroup.Item key={index}>
+                                        {user.user.passed_themes.some(theme => theme.id == item.id )
+                                            ?<a>✅</a>
+                                            :<a>💡</a>}
+                                        <a href="" style={{textDecoration:0}}>{item.attributes.Name}</a>
+                                    </ListGroup.Item>
+                                ))}
+                            </ListGroup>
+                        
                     </Accordion.Body>
                 </Accordion.Item>
                 )}

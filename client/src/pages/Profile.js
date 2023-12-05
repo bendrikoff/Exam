@@ -6,6 +6,7 @@ import {useContext, useState} from "react";
 import { updateAvatar } from '../http/userAPI';
 import axios from 'axios';
 import profile from "../Images/Education_Icon_Set-19.png";
+import {$host} from "../http/index";
 
 
 
@@ -53,8 +54,7 @@ const Profile = () => {
                     updateAvatar(data.data[0], user._id).then(
                         window.location.reload(false)
                     )
-                }
-                )
+                });
             } else {
                 alert("Выберите изображения формата png или jpg")
             }

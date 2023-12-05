@@ -32,9 +32,9 @@ const Menu = () => {
             <Button variant="light" href="/"><Image style={{width:15, marginRight:5}} src={lamp} />План</Button>
             <Button variant="light" href="/variant"><Image style={{width:15, marginRight:5}} src={variants} />Варианты</Button>
             <Button variant="light" href="/errors"><Image style={{width:15, marginRight:5}} src={errors} />Ошибки
-                {errorsList.filter(error=>error.attributes.question.data.attributes!==undefined && error.attributes.Archived===false).length > 0
+                {/* {errorsList.filter(error=>error.attributes.question.data.attributes!==undefined && error.attributes.Archived===false).length > 0
                     ?<Badge bg="danger">{errorsList.filter(error=>error.attributes.question.data.attributes!==undefined && error.attributes.Archived===false).length}</Badge>
-                    :<div></div>}
+                    :<div></div>} */}
             </Button>
             <Button variant="light" href="/profile"><Image style={{width:15, marginRight:5}} src={profile} />Профиль </Button>
             <Button variant="light" onClick={() => logOut()}>🚪 Выйти </Button>

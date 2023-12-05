@@ -72,6 +72,11 @@
       "allowedTypes": [
         "images"
       ]
+    },
+    "passed_themes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::theme.theme"
     }
   }
 }
