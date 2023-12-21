@@ -11,6 +11,14 @@ export const getQuestions = async () => {
     return data;
 }
 
+export const getQuestionsByTheme = async (themeId) => {
+
+    const data = $host.get('api/questions?populate[Image]=*&filters[theme][id][$eq]='+ themeId ,
+        { headers: {"Authorization" : `Bearer ${token}`}
+        })
+    return data;
+}
+
 export const getErrors = async () => {
 
     const data = $host.get('api/errors?populate=*' ,
@@ -18,16 +26,21 @@ export const getErrors = async () => {
         })
     return data;
 }
-
-export const addError = async (id,answer) => {
+export const getUserErrors = async (userId) => {
+    const data = $host.get('api/errors?populate=*&filters[user][id][$eq]='+userId ,
+        { headers: {"Authorization" : `Bearer ${token}`}
+        })
+    return data;
+}
+export const addError = async (id,answer,user) => {
     const data = $host.post('api/errors/',
-        { data: {Archived:false,question:id,Answer:answer},
+        { data: {Archived:false,question:id,Answer:answer,user:user},
         })
     return data;
 }
 
-export const getErrorByQuestionId = async (id) => {
-    const data = $host.get('api/errors?filters[question][id][$eq]='+ id)
+export const getErrorByQuestionId = async (id, userId) => {
+    const data = $host.get('api/errors?filters[question][id][$eq]='+ id + '&filters[user][id][$eq]='+userId)
     return data;
 }
 
@@ -46,3 +59,62 @@ export const getSections = async () => {
     return data;
 }
 
+export const getTheme = async (id) => {
+
+    const data = $host.get('api/themes/'+id+'?populate=*',
+        {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+    return data;
+}
+
+export const userLearnTheme = async (userId, themeId) => {
+    const data = $host.put('/api/themes/' + themeId,
+        {
+            data: { users: {connect: [userId]}},
+        });
+    return data;
+}
+
+export const setErrorUser = async (error, user) => {
+    const data = $host.put('/api/errors/' + error,
+        {
+            data: { user: user},
+        });
+    return data;
+}
+export const createDayPassTheme = async () => {
+    const data = $host.post('/api/day-pass-themes',
+        {
+            data: {},
+        });
+    return data;
+}
+
+export const addDayPassTheme = async (theme, user,day) => {
+    const data = $host.put('/api/day-pass-themes/'+ day,
+        {
+            data: {
+                user: user,
+                theme:theme,
+                date: new Date()
+            },
+        });
+    return data;
+}
+
+export const getDayPassTheme = async (theme, user) => {
+    const data = $host.get('/api/day-pass-themes/?filters[theme][id][$eq]='+ theme + '&filters[user][id][$eq]=' + user,
+        {
+            headers: { "Authorization": `Bearer ${token}` },
+        });
+    return data;
+}
+
+export const getDayPassThemeByUser = async (user) => {
+    const data = $host.get('/api/day-pass-themes/?&filters[user][id][$eq]=' + user,
+        {
+            headers: { "Authorization": `Bearer ${token}` },
+        });
+    return data;
+}

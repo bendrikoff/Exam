@@ -17,16 +17,17 @@
       "relation": "oneToOne",
       "target": "api::question.question"
     },
-    "user": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "admin::user"
-    },
     "Archived": {
       "type": "boolean"
     },
     "Answer": {
       "type": "string"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "errors"
     }
   }
 }

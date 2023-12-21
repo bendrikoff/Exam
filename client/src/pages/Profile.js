@@ -1,12 +1,14 @@
 import {Context} from '../index';
-import {Alert, Button, Col, Container, Image, Row, Stack, ToggleButton,Form } from "react-bootstrap";
+import {Alert, Button, Col, Container, Image, Row, Stack, Spinner,Form } from "react-bootstrap";
+import {getDayPassThemeByUser, getUserErrors} from "../http/api";
 import Menu from "../components/Menu";
 import Chart from "../components/Chart";
-import {useContext, useState} from "react";
+import {useEffect,useContext, useState} from "react";
 import { updateAvatar } from '../http/userAPI';
 import axios from 'axios';
 import profile from "../Images/Education_Icon_Set-19.png";
 import {$host} from "../http/index";
+import {adress} from "../components/Consts";
 
 
 
@@ -14,16 +16,16 @@ const Profile = () => {
     const {user} = useContext(Context);
     const [file, setFile] = useState({})
 
+    const [errorsCount, setErrorsCount] = useState(0);
+    const [archivedErrorsCount, setArchivedErrorsCount] = useState(0);
+    const [passedVariants, setPassedVariants] = useState({});
+    const [loading, setLoading] = useState(true);
 
-    const data = [
-        { dayOfWeek: "Mon", numSolvedTasks: 5 },
-        { dayOfWeek: "Tue", numSolvedTasks: 8 },
-        { dayOfWeek: "Wed", numSolvedTasks: 3 },
-        { dayOfWeek: "Thu", numSolvedTasks: 12 },
-        { dayOfWeek: "Fri", numSolvedTasks: 7 },
-        { dayOfWeek: "Sat", numSolvedTasks: 9 },
-        { dayOfWeek: "Sun", numSolvedTasks: 4 },
-    ];
+    const [data, setData] = useState([]);
+
+    const [monthData, setMonthData] = useState([]);
+
+
     const  dataOptions = {
         year: 'numeric',
         month: 'numeric',
@@ -48,7 +50,7 @@ const Profile = () => {
             if (fileType === 'image/jpeg' || fileType === 'image/png') {
                 const uploadRes = await axios({
                     method: 'POST',
-                    url: 'http://localhost:1337/api/upload',
+                    url: adress+'/api/upload',
                     data
                 }).then(data => {
                     updateAvatar(data.data[0], user._id).then(
@@ -61,8 +63,71 @@ const Profile = () => {
         }
     }
 
+    useEffect(() => {
+        getUserErrors(user.id)
+            .then(data=>{
+                setErrorsCount(data?.data?.data?.length);
+                setArchivedErrorsCount(data?.data?.data?.filter(x=> x.attributes.Archived == true).length);
+            })
+            .finally(() => setLoading(false));
+        getDayPassThemeByUser(user.id)
+            .then(data=>{
+                setPassedVariants(data?.data?.data);
+                // Ваш массив объектов
+                var objects = data?.data?.data;
+
+                var dateCounter = {};
+
+                for (var i = 0; i < objects.length; i++) {
+                    var date = new Date(objects[i].attributes?.date);
+                    var formattedDate = date.toISOString().split('T')[0];
+                    dateCounter[formattedDate] = (dateCounter[formattedDate] || 0) + 1;
+                }
+
+                var result = [];
+                for (var i = 6; i >= 0; i--) {
+                    var currentDate = new Date();
+                    currentDate.setDate(currentDate.getDate() - i);
+                    var formattedDate = currentDate.toISOString().split('T')[0];
+                    var dayOfWeek = getDayOfWeek(currentDate.getDay());
+                    result.push({day: dayOfWeek,решено: dateCounter[formattedDate] || 0 });
+                }
+                setData(result);
+                function getDayOfWeek(dayIndex) {
+                    const daysOfWeek = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+                    return daysOfWeek[dayIndex];
+                }
+
+                var monthCounter = {};
+
+                for (var i = 0; i < objects.length; i++) {
+                    var month = new Date(objects[i].attributes?.date).toLocaleString('ru-RU', { month: 'long' });
+                    monthCounter[month] = (monthCounter[month] || 0) + 1;
+                }
+
+                var currentMonth = new Date().toLocaleString('ru-RU', { month: 'long' });
+
+                var monthData = [];
+                for (var i = 5; i >= 0; i--) {
+                    var month = new Date();
+                    month.setMonth(month.getMonth() - i);
+                    var formattedMonth = month.toLocaleString('ru-RU', { month: 'long' });
+                    monthData.push({ month: formattedMonth, решено: monthCounter[formattedMonth] || 0 });
+                }
+
+                setMonthData(monthData);
+
+            })
+            .finally(() => setLoading(false));
+    }, []);
+
+
+    if (loading) {
+        return <Spinner animation={"grow"}/>
+    }
+
     const avatar = user?._user?.Avatar?.url;
-    const avatarPath = "http://localhost:1337" + user?._user?.Avatar?.url;
+    const avatarPath = adress + user?._user?.Avatar?.url;
     return (
         <Container>
             <Row className="mt-2">
@@ -91,28 +156,25 @@ const Profile = () => {
                     <hr />
                     <Row className="mt-2">
                         <Col md={6}>
-                                <Alert variant="primary" className="mx-auto">
-                                    <h5>Решено задач: 228</h5>
-                                </Alert>
                                 <Alert variant="success" className="mx-auto">
-                                    <h5>Ошибок: 15</h5>
+                                    <h5>Допущено ошибок: {errorsCount}</h5>
                                 </Alert>
                                 <Alert variant="warning" className="mx-auto">
-                                    <h5>Исправлено ошибок: 15</h5>
+                                    <h5>Исправлено ошибок: {archivedErrorsCount}</h5>
                                 </Alert>
                         </Col>
                         <Col md={6}>
-                            <Alert variant="primary" className="mx-auto">
-                                <h5>Дней подряд: 3</h5>
-                            </Alert>
+                        <Alert variant="primary" className="mx-auto">
+                                    <h5>Решено вариантов: {passedVariants.length}</h5>
+                                </Alert>
                             <Alert variant="success" className="mx-auto">
-                                <h5>Изучено тем: 2</h5>
+                                <h5>Изучено тем: {user.user?.passed_themes?.length}</h5>
                             </Alert>
                         </Col>
                     </Row>
                     <hr />
                     <Stack direction="vertical" className={"mt-4"}>
-                        <Chart />
+                        <Chart data={data}  monthData={monthData}/>
                     </Stack>
                 </Col>
             </Row>

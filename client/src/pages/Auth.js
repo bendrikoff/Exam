@@ -1,5 +1,5 @@
 import React, {useContext, useState} from 'react';
-import {Container, Form} from "react-bootstrap";
+import {Container, Form, Modal} from "react-bootstrap";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
@@ -8,6 +8,8 @@ import {LOGIN_ROUTE, MAIN_ROUTE, REGISTRATION_ROUTE} from "../utils/consts";
 import {login, registration} from "../http/userAPI";
 import {observer} from "mobx-react-lite";
 import {Context} from "../index";
+import errors from "./Errors";
+
 
 const Auth = observer(() => {
     const {user} = useContext(Context);
@@ -26,19 +28,39 @@ const Auth = observer(() => {
 
     const [isLoginPage, setLogin] = useState('')
 
+    const [show, setShow] = useState(false);
+
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+
     const click = async () => {
         if(validation()) {
             try {
                 let data;
                 if (isLogin) {
-                    data = await login(email, password);
+                    login(email, password)
+                        .then((data) => {
+                            user.setUser(data.user);
+                            user.setIsAuth(true);
+                            user.setId(data.user.id);
+                            window.open("/profile", "_self");
+                        }
+                    ).catch(error => {
+                        if(error?.response?.data?.error.message === "Invalid identifier or password"){
+                            handleShow();
+
+                        }
+                    });
                 } else {
-                    data = await registration(username, email, password);
+                    registration(username, email, password).then((data) => {
+                        user.setUser(data.user);
+                        user.setIsAuth(true);
+                        user.setId(data.user.id);
+                        window.open("/profile", "_self");
+                    }
+                    );
                 }
-                user.setUser(data.user)
-                user.setIsAuth(true)
-                user.setId(data.user.id)
-                navigate(MAIN_ROUTE)
+                //navigate('/profile');
             } catch (e) {
                 alert(e.response.data?.error.message);
                 alert(e.response.data?.message[0]);
@@ -97,11 +119,25 @@ const Auth = observer(() => {
         loginPage.login =  isLoginPage;
     }
 
+    
     return (
         <Container
             className="d-flex justify-content-center align-items-center"
             style={{height: window.innerHeight - 54}}
         >
+            <Modal
+                show={show}
+                onHide={handleClose}
+                backdrop="static"
+                keyboard={false}
+            >
+                <Modal.Body>
+                    Вы ввели неверные данные, попробуйте еще раз.
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="primary" onClick={handleClose}>Ок</Button>
+                </Modal.Footer>
+            </Modal>
             <Card style={{width: 600}} className="p-5">
                 <h2 className="m-auto">{isLogin ? 'Авторизация' : "Регистрация"}</h2>
                 <Form className="d-flex flex-column">
@@ -167,7 +203,7 @@ const Auth = observer(() => {
 
                 </Form>
             </Card>
-        </Container>
+                    </Container>
     );
 });
 

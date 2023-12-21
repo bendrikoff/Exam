@@ -32,6 +32,12 @@
     },
     "Answer": {
       "type": "string"
+    },
+    "theme": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::theme.theme",
+      "inversedBy": "questions"
     }
   }
 }

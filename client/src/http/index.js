@@ -1,11 +1,12 @@
 import axios from "axios";
+import {adress} from "../components/Consts";
 
 const $host = axios.create({
-    baseURL: "http://localhost:1337"
+    baseURL: adress
 });
 
 const $authHost = axios.create({
-    baseURL: "http://localhost:1337",
+    baseURL: adress,
     headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }

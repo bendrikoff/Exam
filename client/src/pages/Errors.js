@@ -1,25 +1,30 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Button, Col, Container, Image, ProgressBar, Row, Spinner} from "react-bootstrap";
 import Alert from 'react-bootstrap/Alert';
 import Menu from "../components/Menu";
-import {archiveError, getErrors} from "../http/api";
+import {archiveError, getErrors, getUserErrors} from "../http/api";
 import {observer} from "mobx-react-lite";
+import {Context} from '../index';
+
 
 const Errors = observer(() => {
+    const {user} = useContext(Context);
+
     const [errors, setErrors] = useState({info: []});
     const [loading, setLoading] = useState(true);
 
     const [isShowArchive, setIsShowArchive] = useState(false);
 
     useEffect(() => {
-        getErrors().then(data=>
+        getUserErrors(user.user.id).then(data=>
             setErrors(data.data.data)).finally(() => setLoading(false));
     }, []);
 
     const setArchiveError = (id, archive) => {
         setLoading(true)
         archiveError(id, archive)
-            .then(data => getErrors().then(data=>setErrors(data.data.data)).finally(() => setLoading(false)));
+            .then(data => getUserErrors(user.user.id).then(data=>
+                setErrors(data.data.data)).finally(() => setLoading(false)));
     };
 
     if (loading) {
@@ -44,7 +49,7 @@ const Errors = observer(() => {
                             </a>
                         </div>
                     </Container>
-                    {errors.filter(error=>error.attributes.question.data.attributes!==undefined && error.attributes.Archived===isShowArchive).map(error=>
+                    {errors?.filter(error=>error.attributes.question.data.attributes!==undefined && error.attributes.Archived===isShowArchive).map(error=>
                         <Alert key={error.id} variant="warning">
                             <p>
                                 {error.attributes.question.data.attributes.Number}. {error.attributes.question.data.attributes.Question}

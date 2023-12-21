@@ -1,24 +1,49 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext,useEffect, useState} from 'react';
 import {Button, Card, Col, Container, Form, Image, Row, Spinner} from "react-bootstrap";
 import Menu from "../components/Menu";
-import {addError, archiveError, getError, getErrorByQuestionId, getQuestions} from "../http/api";
+import {
+    addError,
+    archiveError,
+    getError,
+    getErrorByQuestionId,
+    getQuestions,
+    getQuestionsByTheme,
+    getTheme,
+    userLearnTheme,
+    setErrorUser,
+    getDayPassTheme, createDayPassTheme, addDayPassTheme
+} from "../http/api";
 import {observer} from "mobx-react-lite";
+import { useParams } from "react-router-dom";
+import {Context} from "../index";
+import {adress} from "../components/Consts";
+
 
 const Variant = observer(() => {
+    const {user} = useContext(Context);
+    const {themeId} = useParams();
     let errorAnswers = 0;
     let correctAnswers = 0;
     const [errors, setErrors] = useState(0);
     const [corrects, setCorrects] = useState(0);
 
-    const [questions, setQuestions] = useState({info: []});
+    const [questions, setQuestions] = useState([]);
 
     const [isTesting, setIsTesting] = useState(true);
 
+    const [finishText, setFinishText] = useState("");
+
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        getQuestions().then(data=>setQuestions(data.data.data)).finally(() => setLoading(false));
-    }, []);
+    if(themeId) { 
+        useEffect(() => {
+            getQuestionsByTheme(themeId).then(data=>setQuestions(data.data.data)).finally(() => setLoading(false));
+        }, []);
+    } else {
+        useEffect(() => {
+            getQuestions().then(data=>setQuestions(data.data.data)).finally(() => setLoading(false));
+        }, []);
+    }
 
     const [answers,setAnswers] = useState([]);
 
@@ -42,15 +67,31 @@ const Variant = observer(() => {
             index++;
             array.push(el.value);
         });
+
+        setFinishText(correctAnswers >= errorAnswers ?
+            "Отличный результат! Ты изучил тему, приступай к следующей."
+            : "Ты недостаточно изучил тему. Еще раз повтори и попробуй позже.");
+
+        if(correctAnswers >= errorAnswers){
+            getTheme(themeId)
+                .then(data => userLearnTheme(user.id, data.data.data.id));
+            getDayPassTheme(themeId, user.id)
+                .then(data => {
+                    if(data.data.data.length == 0) {
+                        createDayPassTheme().then(data =>
+                            addDayPassTheme(themeId,user.id,data.data.data.id));
+                    }
+                });
+        }
         setAnswers(array);
         setIsTesting(false);
     }
 
     function addToErrors(questionId,answer){
-        getErrorByQuestionId(questionId).then(data=>{
-            console.log(data.data.data)
+        getErrorByQuestionId(questionId, user?.user.id).then(data=>{
             if(data.data.data.length==0){
-                addError(questionId,answer);
+                addError(questionId,answer,user?.user)
+                    .then(data=> setErrorUser(data.data.data.id, user.user.id));
             }
         })
     }
@@ -74,16 +115,16 @@ const Variant = observer(() => {
                         </div>
                     </Container>
                     <Form>
-                        {questions.map(question=>
+                        {questions?.map(question=>
                             <Card key={question.id} className={"mb-3"}>
                                 <Container className={"mt-3"}>
                                     <Card.Text>
-                                        {question.attributes.Number}. {question.attributes.Question}
+                                        {question.attributes.Question}
                                     </Card.Text>
                                 </Container>
-                                {question.attributes.Image.data
-                                    ?<Image src={'http://localhost:1337'+question.attributes.Image.data.attributes.url}  style={{width:150}}/>
-                                    :<div></div>
+                                {question?.attributes?.Image?.data
+                                    ? <Image src={adress + question.attributes.Image.data.attributes.url} style={{ width: 150 }} />
+                                    : <div></div>
                                 }
                                 <Card.Body>
                                         <Form.Group controlId="answerText">
@@ -95,7 +136,7 @@ const Variant = observer(() => {
                         {
                             isTesting
                                 ?<Button onClick={onClick} variant="primary">Отправить</Button>
-                                :<h3>Верных ответов: {corrects}. Ошибок: {errors}.<p>Отличный результат, продолжайте в том же духе!</p></h3>
+                                :<h3>Верных ответов: {corrects}. Ошибок: {errors}.<p>{finishText}</p></h3>
                         }
                     </Form>
                 </Col>

@@ -3,7 +3,7 @@ import Menu from "../components/Menu";
 import {Context} from '../index';
 import Hat from "../Images/Education_Icon_Set-16.png";
 import { useEffect, useState, useContext } from "react";
-import { getErrors, getSections } from "../http/api";
+import { getUserErrors, getSections } from "../http/api";
 
 
 const PlanPage = () => {
@@ -15,12 +15,13 @@ const PlanPage = () => {
 
 
     useEffect(() => {
-        getErrors().then(data => setErrors(data.data.data));
+        getUserErrors(user.user.id).then(data => setErrors(data.data.data));
     }, []);
 
     useEffect(() => {
         getSections().then(data=>
-            setSections(data.data.data)).finally(() => setLoading(false));
+            setSections(data.data.data))
+                .finally(() => setLoading(false));
     }, []);
 
     if (loading) {
@@ -31,7 +32,7 @@ const PlanPage = () => {
         return sum + section.attributes?.themes?.data.length;
     }, 0);
 
-    const passedThemesCount = user.user.passed_themes.length;
+    const passedThemesCount = user.user?.passed_themes?.length;
 
     var percentage = (passedThemesCount / totalThemes) * 100;
 
@@ -65,14 +66,14 @@ const PlanPage = () => {
                 {sections?.map(section => 
                     <Accordion.Item eventKey={section.id}>
                     <Accordion.Header >
-                        <h2>{section?.attributes?.themes?.data.every(themes => user.user.passed_themes.some(userThemes => userThemes.id == themes.id))
+                        <h2>{section?.attributes?.themes?.data.every(themes => user.user?.passed_themes?.some(userThemes => userThemes.id == themes.id))
                         ?<a>✅</a>
                         :<a>💡</a>}
                             Модуль {section.id}. {section.attributes.Name}
                         </h2>
                     <Badge bg="primary" pill>
                         {section?.attributes?.themes?.data.filter(userThemes => 
-                            !user.user.passed_themes.some(themes => 
+                            !user.user?.passed_themes?.some(themes => 
                                 themes.id == userThemes.id)).length}
                     </Badge>
                     </Accordion.Header>
@@ -80,10 +81,10 @@ const PlanPage = () => {
                             <ListGroup>
                                 {section?.attributes?.themes?.data.map((item, index) => (
                                     <ListGroup.Item key={index}>
-                                        {user.user.passed_themes.some(theme => theme.id == item.id )
+                                        {user.user?.passed_themes?.some(theme => theme.id == item.id )
                                             ?<a>✅</a>
                                             :<a>💡</a>}
-                                        <a href="" style={{textDecoration:0}}>{item.attributes.Name}</a>
+                                        <a href={"/theme/" + item.id} style={{textDecoration:0}}>{item.attributes.Name}</a>
                                     </ListGroup.Item>
                                 ))}
                             </ListGroup>

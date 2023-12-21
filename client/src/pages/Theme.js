@@ -1,16 +1,26 @@
-import {Context} from '../index';
-import {Alert, Button, Col, Container, Image, Row, Stack, ToggleButton,Form } from "react-bootstrap";
+import { Alert, Card, Col, Container, Image, ProgressBar, Row, Spinner, Accordion, Button, Badge,ListGroup } from "react-bootstrap";
 import Menu from "../components/Menu";
-import Chart from "../components/Chart";
-import {useContext, useState} from "react";
-import { updateAvatar } from '../http/userAPI';
-import axios from 'axios';
-import profile from "../Images/Education_Icon_Set-19.png";
-import {$host} from "../http/index";
+import { useEffect, useState, useContext } from "react";
+import { useParams } from "react-router-dom";
+import { getTheme } from "../http/api";
+import ReactMarkdown from "react-markdown";
+
+const Theme = () => {
+    const {id} = useParams();
+    const [theme, setTheme] = useState({ });
+    const [loading, setLoading] = useState(true);
 
 
 
-const Profile = () => {
+    useEffect(() => {
+        getTheme(id).then(data=>
+            setTheme(data)).finally(() => setLoading(false));
+    }, []);
+
+    if (loading) {
+        return <Spinner animation={"grow"} />
+    }
+
     return (
         <Container>
             <Row className="mt-2">
@@ -20,38 +30,16 @@ const Profile = () => {
                 <Col md={9} className="mt-5">
                     <Container>
                         
+                    <h1>{theme.data.data.attributes.Name}</h1>
+                    <ReactMarkdown >{theme.data.data.attributes.Theory}</ReactMarkdown>
 
+                    <Button variant="success" href={"/variant/"+ id}>Сдать тест</Button>
                     </Container>
-                    <hr />
-                    <Row className="mt-2">
-                        <Col md={6}>
-                                <Alert variant="primary" className="mx-auto">
-                                    <h5>Решено задач: 228</h5>
-                                </Alert>
-                                <Alert variant="success" className="mx-auto">
-                                    <h5>Ошибок: 15</h5>
-                                </Alert>
-                                <Alert variant="warning" className="mx-auto">
-                                    <h5>Исправлено ошибок: 15</h5>
-                                </Alert>
-                        </Col>
-                        <Col md={6}>
-                            <Alert variant="primary" className="mx-auto">
-                                <h5>Дней подряд: 3</h5>
-                            </Alert>
-                            <Alert variant="success" className="mx-auto">
-                                <h5>Изучено тем: 2</h5>
-                            </Alert>
-                        </Col>
-                    </Row>
-                    <hr />
-                    <Stack direction="vertical" className={"mt-4"}>
-                        <Chart />
-                    </Stack>
+                    
                 </Col>
             </Row>
         </Container>
     );
 };
 
-export default Profile;
+export default Theme;

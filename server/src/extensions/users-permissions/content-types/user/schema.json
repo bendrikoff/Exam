@@ -75,8 +75,15 @@
     },
     "passed_themes": {
       "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::theme.theme",
+      "inversedBy": "users"
+    },
+    "errors": {
+      "type": "relation",
       "relation": "oneToMany",
-      "target": "api::theme.theme"
+      "target": "api::error.error",
+      "mappedBy": "user"
     }
   }
 }
